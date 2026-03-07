@@ -110,3 +110,46 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
 /* ── Log Bar ── */
 #log-bar{position:fixed;bottom:0;left:0;right:0;background:#0d111799;border-top:1px solid var(--border);padding:3px 10px;font-size:11px;font-family:monospace;color:var(--muted);display:none;z-index:100;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #log-bar.show{display:block;}
+
+/* ── スマートフォン対応 (共通) ── */
+@media (max-width: 600px) {
+  /* stats (N pages · M links) を非表示 */
+  #stats { display: none; }
+  /* GitHub / X アイコンも非表示にしてヘッダーを省スペース化 */
+  #github-link, #x-link { display: none; }
+  /* 検索ボックスをヘッダー幅いっぱいに広げる */
+  #search-wrap { margin-left: auto; flex: 1; min-width: 0; }
+  #search { width: 100%; box-sizing: border-box; }
+  /* 検索結果ドロップダウンも幅調整 */
+  #search-results { width: calc(100vw - 28px); right: 0; }
+  /* レジェンドを小さく */
+  #legend { font-size: 10px; padding: 5px 8px; }
+  /* サイドパネルをフル幅で表示 */
+  #side-panel { width: 100%; }
+}
+
+/* ── 縦表示: パネルをビューポート下半分にオーバーレイ ── */
+@media (max-width: 600px) and (orientation: portrait) {
+  /* position:fixed でキャンバスの上に重ねて確実に表示 */
+  #side-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    height: 50vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    z-index: 50;
+  }
+  /* iOS Safari で内側スクロールを有効化 */
+  #panel-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+  /* JS による right 移動を無効化 */
+  #legend { right: 14px !important; transition: bottom .35s; }
+  /* パネルが開いた時に legend / history-bar をパネルの上へ退避 */
+  #main:has(#side-panel.open) #legend      { bottom: calc(50vh + 14px); }
+  #main:has(#side-panel.open) #history-bar { bottom: calc(50vh + 14px); }
+}

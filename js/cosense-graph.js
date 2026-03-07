@@ -477,9 +477,14 @@ function flyTo(simNode) {
   if (!simNode.x) return;
   const W = canvas.width, H = canvas.height;
   const scale = Math.max(transform.k, 1.2);
+  // 縦表示スマートフォンはパネルが下半分を覆うため、上半分の中央(H/4)に移動
+  const isPortraitMobile = window.matchMedia(
+    '(max-width: 600px) and (orientation: portrait)'
+  ).matches;
+  const targetY = isPortraitMobile ? H / 4 : H / 2;
   d3.select(canvas).transition().duration(600)
     .call(zoomBeh.transform, d3.zoomIdentity
-      .translate(W / 2 - scale * simNode.x, H / 2 - scale * simNode.y)
+      .translate(W / 2 - scale * simNode.x, targetY - scale * simNode.y)
       .scale(scale));
 }
 
