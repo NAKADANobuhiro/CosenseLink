@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 * * * *'  # 毎時0分に実行
   workflow_dispatch:       # 手動実行も可能
+    inputs:
+      force:
+        description: 'タイムスタンプを無視して強制実行する'
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # a6j.js の自動コミット・push に必要
@@ -45,7 +50,10 @@ jobs:
           echo "Cosense last updated : $COSENSE_UPDATED ($(date -d @$COSENSE_UPDATED --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $COSENSE_UPDATED '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
           echo "a6j.js last committed: $LAST_COMMIT ($(date -d @$LAST_COMMIT --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $LAST_COMMIT '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
 
-          if [ "$COSENSE_UPDATED" -gt "$LAST_COMMIT" ]; then
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "⚡ 強制実行モード — タイムスタンプを無視して取得します"
+          elif [ "$COSENSE_UPDATED" -gt "$LAST_COMMIT" ]; then
             echo "needs_update=true" >> $GITHUB_OUTPUT
             echo "🔄 Cosense に新しい更新があります — JSON を取得します"
           else
