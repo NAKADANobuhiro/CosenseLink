@@ -117,11 +117,18 @@ jobs:
       - name: Generate and commit updated a6j.js
         if: steps.check_update.outputs.needs_update == 'true'
         run: |
-          # exported フィールドを Cosense の最終更新時刻（updated）で上書き
+          # exported フィールドを最終編集時刻で上書き
+          # 優先順位: ①ページ単位の updated 最大値 > ②元の exported（API 取得時刻）
           python3 -c "
           import json
           data = json.load(open('cosense_export.json'))
-          data['exported'] = ${{ steps.check_update.outputs.cosense_updated }}
+          pages = data.get('pages', [])
+          max_page_updated = max((p.get('updated', 0) for p in pages), default=0)
+          if max_page_updated > 0:
+              data['exported'] = max_page_updated
+              print(f'exported = max page updated: {max_page_updated}')
+          else:
+              print(f'exported = original value: {data.get(\"exported\", \"N/A\")}')
           json.dump(data, open('cosense_export.json', 'w'), ensure_ascii=False)
           "
           python tool/update-a6j-js.py cosense_export.json /tmp/a6j_new.js -f -e
