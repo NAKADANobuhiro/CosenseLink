@@ -50,6 +50,9 @@ jobs:
           echo "Cosense last updated : $COSENSE_UPDATED ($(date -d @$COSENSE_UPDATED --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $COSENSE_UPDATED '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
           echo "a6j.js last committed: $LAST_COMMIT ($(date -d @$LAST_COMMIT --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $LAST_COMMIT '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
 
+          # 後続ステップで使用するため出力に保存
+          echo "cosense_updated=$COSENSE_UPDATED" >> $GITHUB_OUTPUT
+
           if [ "${{ github.event.inputs.force }}" = "true" ]; then
             echo "needs_update=true" >> $GITHUB_OUTPUT
             echo "⚡ 強制実行モード — タイムスタンプを無視して取得します"
@@ -114,6 +117,13 @@ jobs:
       - name: Generate and commit updated a6j.js
         if: steps.check_update.outputs.needs_update == 'true'
         run: |
+          # exported フィールドを Cosense の最終更新時刻（updated）で上書き
+          python3 -c "
+          import json
+          data = json.load(open('cosense_export.json'))
+          data['exported'] = ${{ steps.check_update.outputs.cosense_updated }}
+          json.dump(data, open('cosense_export.json', 'w'), ensure_ascii=False)
+          "
           python tool/update-a6j-js.py cosense_export.json /tmp/a6j_new.js -f -e
 
           # 生成結果を現在のファイルと比較（念のため）
