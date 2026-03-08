@@ -108,11 +108,12 @@ def slim_page(p: dict) -> dict:
 
 slim_pages = [slim_page(p) for p in pages_raw]
 
-# トップレベルは name / displayName のみ保持
+# トップレベルは name / displayName / exported のみ保持
 slim_data: dict = {}
 if isinstance(raw, dict):
     if "name"        in raw: slim_data["name"]        = raw["name"]
     if "displayName" in raw: slim_data["displayName"] = raw["displayName"]
+    if "exported"    in raw: slim_data["exported"]    = raw["exported"]
 slim_data["pages"] = slim_pages
 
 

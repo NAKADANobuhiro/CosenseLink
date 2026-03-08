@@ -190,6 +190,13 @@ function initGraph(json) {
       : `🕸️ ${graphData.meta.name}`;
     document.getElementById('stats').textContent =
       `${graphData.nodes.length} pages · ${graphData.links.length} links`;
+    const exportedEl = document.getElementById('data-date');
+    if (exportedEl && json.exported) {
+      const ts = json.exported > 1e10 ? json.exported : json.exported * 1000;
+      const d = new Date(ts);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      exportedEl.textContent = dateStr;
+    }
 
     closePanel();
     renderHistory();
