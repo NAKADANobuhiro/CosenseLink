@@ -250,7 +250,7 @@ const NODE_COLORS = {
   default: '#58a6ff',  // 通常 (青)
   date:    '#e3b341',  // 日付 (黄)
   movie:   '#d2a8ff',  // 映画 (紫)
-  person:  '#ffffff',  // 人物 (白)
+  person:  '#adbac7',  // 人物 (グレー)
 };
 
 /* 矢印の頭を描く (ターゲットノード円周上に先端を合わせる) */
