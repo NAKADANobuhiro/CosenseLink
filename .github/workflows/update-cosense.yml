@@ -5,6 +5,9 @@ on:
     - cron: '0 * * * *'  # 毎時0分に実行
   workflow_dispatch:       # 手動実行も可能
 
+permissions:
+  contents: write  # a6j.js の自動コミット・push に必要
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -14,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # git log でコミット履歴を取得するため
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if Cosense data was updated since last commit
         id: check_update
@@ -93,7 +97,8 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/NAKADANobuhiro/CosenseLink.git
           git add a6j.js
           git commit -m "chore: update a6j.js from Cosense backup [skip ci]"
-          git push
+          git push origin main
           echo "🚀 a6j.js を更新して push しました"
