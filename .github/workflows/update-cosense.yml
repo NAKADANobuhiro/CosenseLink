@@ -73,6 +73,13 @@ jobs:
             exit 1
           fi
 
+          # レスポンス内容を確認（先頭500文字をログ出力）
+          echo "--- レスポンス先頭500文字 ---"
+          head -c 500 cosense_export.json
+          echo ""
+          echo "--- ファイルサイズ ---"
+          wc -c cosense_export.json
+
           # レスポンスが JSON かチェック
           if ! python3 -c "import json,sys; json.load(open('cosense_export.json'))" 2>/dev/null; then
             echo "::error::レスポンスが有効な JSON ではありません。"
@@ -80,7 +87,21 @@ jobs:
             exit 1
           fi
 
-          echo "✅ JSON 取得成功"
+          # pages が空でないかチェック
+          PAGE_COUNT=$(python3 -c "
+          import json, sys
+          d = json.load(open('cosense_export.json'))
+          pages = d if isinstance(d, list) else d.get('pages', [])
+          print(len(pages))
+          ")
+          echo "取得ページ数: $PAGE_COUNT"
+
+          if [ "$PAGE_COUNT" = "0" ]; then
+            echo "::error::pages が空です。SID の権限または API エンドポイントを確認してください。"
+            exit 1
+          fi
+
+          echo "✅ JSON 取得成功 ($PAGE_COUNT ページ)"
 
       - name: Generate and commit updated a6j.js
         if: steps.check_update.outputs.needs_update == 'true'
