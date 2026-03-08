@@ -72,7 +72,7 @@ jobs:
         run: |
           HTTP_STATUS=$(curl -s -o cosense_export.json -w "%{http_code}" \
             --cookie "connect.sid=${{ secrets.COSENSE_SID }}" \
-            "https://scrapbox.io/api/pages/a6j/export?type=json")
+            "https://scrapbox.io/api/page-data/export/a6j.json")
 
           echo "HTTP status: $HTTP_STATUS"
 
