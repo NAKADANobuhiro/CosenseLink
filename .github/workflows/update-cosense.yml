@@ -12,14 +12,51 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # git log でコミット履歴を取得するため
+
+      - name: Check if Cosense data was updated since last commit
+        id: check_update
+        run: |
+          # Cosense プロジェクトの最終更新時刻を取得（軽量 API）
+          META=$(curl -s \
+            --cookie "connect.sid=${{ secrets.COSENSE_SID }}" \
+            "https://scrapbox.io/api/projects/a6j")
+
+          COSENSE_UPDATED=$(echo "$META" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          print(d.get('updated', 0))
+          " 2>/dev/null)
+
+          if [ -z "$COSENSE_UPDATED" ] || [ "$COSENSE_UPDATED" = "0" ]; then
+            echo "::error::プロジェクトメタデータの取得に失敗しました。SID を確認してください。"
+            echo "$META"
+            exit 1
+          fi
+
+          # a6j.js の最終コミット時刻（Unix 秒）を取得
+          LAST_COMMIT=$(git log -1 --format="%ct" -- a6j.js 2>/dev/null || echo "0")
+
+          echo "Cosense last updated : $COSENSE_UPDATED ($(date -d @$COSENSE_UPDATED --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $COSENSE_UPDATED '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
+          echo "a6j.js last committed: $LAST_COMMIT ($(date -d @$LAST_COMMIT --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $LAST_COMMIT '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
+
+          if [ "$COSENSE_UPDATED" -gt "$LAST_COMMIT" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "🔄 Cosense に新しい更新があります — JSON を取得します"
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "✅ 前回処理以降に更新なし — スキップします"
+          fi
 
       - name: Set up Python
+        if: steps.check_update.outputs.needs_update == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
       - name: Fetch Cosense export JSON
-        id: fetch
+        if: steps.check_update.outputs.needs_update == 'true'
         run: |
           HTTP_STATUS=$(curl -s -o cosense_export.json -w "%{http_code}" \
             --cookie "connect.sid=${{ secrets.COSENSE_SID }}" \
@@ -41,31 +78,22 @@ jobs:
 
           echo "✅ JSON 取得成功"
 
-      - name: Generate new a6j.js
+      - name: Generate and commit updated a6j.js
+        if: steps.check_update.outputs.needs_update == 'true'
         run: |
           python tool/update-a6j-js.py cosense_export.json /tmp/a6j_new.js -f -e
 
-      - name: Check if data has changed
-        id: check
-        run: |
+          # 生成結果を現在のファイルと比較（念のため）
           if diff -q a6j.js /tmp/a6j_new.js > /dev/null 2>&1; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "📭 データに変更なし — スキップします"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "📬 データが更新されました — a6j.js を更新します"
+            echo "📭 内容に差分なし — コミットをスキップします"
+            exit 0
           fi
 
-      - name: Update a6j.js
-        if: steps.check.outputs.changed == 'true'
-        run: |
           cp /tmp/a6j_new.js a6j.js
 
-      - name: Commit and push
-        if: steps.check.outputs.changed == 'true'
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add a6j.js
           git commit -m "chore: update a6j.js from Cosense backup [skip ci]"
           git push
+          echo "🚀 a6j.js を更新して push しました"
