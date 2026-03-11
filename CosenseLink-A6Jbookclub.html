@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アトロク・ブック・クラブ・ファンサイト Cosense Graph Viewer</title>
+<link rel="stylesheet" href="css/cosense-graph.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="a6jbookclub.js"></script>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="spinner"></div>
+  <span id="loading-msg">データを読み込んでいます...</span>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div id="header">
+    <span id="project-name">🕸️</span>
+    <span id="stats"></span>
+    <span id="data-date"></span>
+    <a id="github-link" href="https://github.com/NAKADANobuhiro/CosenseLink" target="_blank" rel="noopener" title="GitHub: CosenseLink">
+      <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+          .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+          -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27
+          .68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+          .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+          0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+    </a>
+    <a id="x-link" href="https://x.com/nakadanobuhiro" target="_blank" rel="noopener" title="X: @nakadanobuhiro">
+      <svg height="20" width="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    </a>
+    <div id="search-wrap">
+      <input type="text" id="search" placeholder="🔍 ページを検索...">
+      <div id="search-results"></div>
+    </div>
+  </div>
+  <div id="main">
+    <canvas id="graph-canvas"></canvas>
+    <div id="history-bar"></div>
+    <div id="legend">
+      <div class="row">
+        <span style="color:var(--red)">● 選択</span>
+        <span style="color:var(--green)">● 隣接</span>
+        <span style="color:var(--blue)">● その他</span>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <span style="color:#e3b341">● 日付</span>
+        <span style="color:#d2a8ff">● 映画</span>
+        <span style="color:#adbac7">● 人物</span>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <span style="color:var(--muted)">── 相互参照</span>
+        <span style="color:var(--muted)">- - → 片側参照</span>
+      </div>
+      <div>ドラッグ: 移動 · スクロール: ズーム · クリック: 詳細</div>
+    </div>
+    <div id="side-panel">
+      <div id="panel-nav">
+        <button id="btn-back" disabled>←</button>
+        <span id="panel-breadcrumb"></span>
+        <button id="btn-close">×</button>
+      </div>
+      <div id="panel-scroll"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Error Overlay -->
+<div id="error-overlay">
+  <div id="error-box">
+    <h2>⚠️ エラーが発生しました</h2>
+    <pre id="error-log"></pre>
+    <button id="error-dismiss">閉じる</button>
+  </div>
+</div>
+
+<!-- Log Bar -->
+<div id="log-bar"></div>
+
+<!-- Node Tooltip -->
+<div id="node-tooltip"></div>
+
+<script src="js/cosense-graph.js"></script>
+</body>
+</html>

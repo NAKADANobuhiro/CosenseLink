@@ -112,6 +112,32 @@ function buildGraph(json) {
 
     const nodeById = new Map(nodes.map(n => [n.id, n]));
 
+    // linksLc 補完: lines 本文の [ブラケット] を解析してエクスポート漏れを補う
+    const LINK_SKIP = /^(https?:\/\/|\/|\*+\s|\/\s|-\s)/;
+    nodes.forEach(node => {
+      const seen = new Set(node.linksLc.map(l => l.toLowerCase()));
+      const extra = [];
+      (node.lines || []).slice(1).forEach(l => {       // 先頭行(タイトル行)はスキップ
+        const text = typeof l === 'string' ? l : (l.text || '');
+        const re = /\[([^\[\]]+)\]/g;
+        let m;
+        while ((m = re.exec(text)) !== null) {
+          const inner = m[1].trim();
+          if (!inner) continue;
+          if (LINK_SKIP.test(inner)) continue;                        // URL・装飾記法はスキップ
+          if (/\s+https?:\/\//.test(inner)) continue;                 // [タイトル URL] 形式はスキップ
+          if (/^https?:\/\/\S+\s/.test(inner)) continue;              // [URL タイトル] 形式はスキップ
+          if (inner.endsWith('.icon')) continue;                       // アイコン記法はスキップ
+          const lc = inner.toLowerCase();
+          if (!seen.has(lc) && titleByLower.has(lc)) {               // 存在するページのみ追加
+            seen.add(lc);
+            extra.push(inner);
+          }
+        }
+      });
+      if (extra.length > 0) node.linksLc = [...node.linksLc, ...extra];
+    });
+
     // 1st pass: 全有向エッジを収集 "srcId\0tgtId"
     const directedSet = new Set();
     nodes.forEach(src => {
@@ -535,6 +561,8 @@ function cosenseToHtml(text) {
     '<img src="$1" alt="">');
   s = s.replace(/\[(https?:\/\/(?:www\.youtube\.com|youtu\.be|vimeo\.com)[^\[\]\s]+)\]/g,
     '<a href="$1" target="_blank" rel="noopener">▶ 動画</a>');
+  s = s.replace(/\[(https?:\/\/[^\[\]\s]+)\s+([^\[\]]+?)\]/g,
+    '<a href="$1" target="_blank" rel="noopener">$2</a>');
   s = s.replace(/\[([^\[\]]+?)\s+(https?:\/\/[^\[\]\s]+)\]/g,
     '<a href="$2" target="_blank" rel="noopener">$1</a>');
   s = s.replace(/\[(https?:\/\/[^\[\]\s]+)\]/g,
@@ -547,6 +575,9 @@ function cosenseToHtml(text) {
     return `<span class="ilink" data-link="${tag}" style="color:var(--green)">#${tag}</span>`;
   });
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // 裸の URL（ブラケット処理済みの href / リンクテキスト内は除外）
+  s = s.replace(/(?<![=">])(https?:\/\/[^\s<>"[\]]+)/g,
+    '<a href="$1" target="_blank" rel="noopener">$1</a>');
   return s;
 }
 function escHtml(s) {
