@@ -434,13 +434,22 @@ function initPointerEvents() {
     console.log('[DBG] pointerdown  downNode=', downNode ? downNode.title : null,
       ' canvas:', canvas.width, 'x', canvas.height);
   }, sig);
+  const tooltip = document.getElementById('node-tooltip');
   canvas.addEventListener('pointermove', e => {
-    if (e.buttons > 0) moved = true;
-    else {
-      const r = canvas.getBoundingClientRect();
-      canvas.style.cursor = hitNode(e.clientX - r.left, e.clientY - r.top) ? 'pointer' : 'grab';
+    if (e.buttons > 0) { moved = true; tooltip.style.opacity = '0'; return; }
+    const r = canvas.getBoundingClientRect();
+    const hovered = hitNode(e.clientX - r.left, e.clientY - r.top);
+    canvas.style.cursor = hovered ? 'pointer' : 'grab';
+    if (hovered) {
+      tooltip.textContent = hovered.title;
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top  = (e.clientY - 8)  + 'px';
+      tooltip.style.opacity = '1';
+    } else {
+      tooltip.style.opacity = '0';
     }
   }, sig);
+  canvas.addEventListener('pointerleave', () => { tooltip.style.opacity = '0'; }, sig);
   canvas.addEventListener('pointerup', e => {
     canvas.classList.remove('grabbing');
     const r = canvas.getBoundingClientRect();

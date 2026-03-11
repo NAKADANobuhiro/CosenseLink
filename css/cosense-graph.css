@@ -156,3 +156,20 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
   #main:has(#side-panel.open) #legend      { bottom: calc(50vh + 14px); }
   #main:has(#side-panel.open) #history-bar { bottom: calc(50vh + 14px); }
 }
+
+/* ── Node Tooltip ── */
+#node-tooltip{
+  position:fixed;
+  pointer-events:none;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:12px;
+  padding:4px 9px;
+  border-radius:6px;
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.5);
+  opacity:0;
+  transition:opacity .1s;
+  z-index:200;
+}
