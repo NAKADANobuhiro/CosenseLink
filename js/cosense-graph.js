@@ -564,7 +564,18 @@ function buildCard(node) {
   // タイトル
   const titleEl = document.createElement('div');
   titleEl.className = 'doc-title';
-  titleEl.textContent = orig.title;
+  const projectId = graphData.meta && graphData.meta.projectId;
+  if (projectId) {
+    const titleLink = document.createElement('a');
+    titleLink.href = `https://scrapbox.io/${projectId}/${encodeURIComponent(orig.title)}`;
+    titleLink.target = '_blank';
+    titleLink.rel = 'noopener';
+    titleLink.textContent = orig.title;
+    titleLink.className = 'doc-title-link';
+    titleEl.appendChild(titleLink);
+  } else {
+    titleEl.textContent = orig.title;
+  }
   doc.appendChild(titleEl);
 
   // メタ情報
