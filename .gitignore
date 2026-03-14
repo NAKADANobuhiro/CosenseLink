@@ -1,5 +1,6 @@
 .mkdata/
 .old/
+work/
 tool/*.json
 tool/*.js
 CosenseLink.code-workspace
