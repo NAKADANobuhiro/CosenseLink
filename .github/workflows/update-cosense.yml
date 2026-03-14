@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # git log でコミット履歴を取得するため
+          fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if Cosense data was updated since last commit
@@ -44,11 +44,11 @@ jobs:
             exit 1
           fi
 
-          # a6j.js の最終コミット時刻（Unix 秒）を取得
-          LAST_COMMIT=$(git log -1 --format="%ct" -- a6j.js 2>/dev/null || echo "0")
+          # 前回処理時の Cosense タイムスタンプをファイルから取得
+          LAST_COMMIT=$(cat .cosense-last-updated 2>/dev/null || echo "0")
 
-          echo "Cosense last updated : $COSENSE_UPDATED ($(date -d @$COSENSE_UPDATED --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $COSENSE_UPDATED '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
-          echo "a6j.js last committed: $LAST_COMMIT ($(date -d @$LAST_COMMIT --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $LAST_COMMIT '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
+          echo "Cosense last updated  : $COSENSE_UPDATED ($(date -d @$COSENSE_UPDATED --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $COSENSE_UPDATED '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
+          echo "Last processed (file) : $LAST_COMMIT ($(date -d @$LAST_COMMIT --utc '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || date -r $LAST_COMMIT '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo 'unknown'))"
 
           # 後続ステップで使用するため出力に保存
           echo "cosense_updated=$COSENSE_UPDATED" >> $GITHUB_OUTPUT
@@ -141,10 +141,13 @@ jobs:
 
           cp /tmp/a6j_new.js a6j.js
 
+          # 今回処理した Cosense タイムスタンプを記録（次回の比較用）
+          echo "${{ steps.check_update.outputs.cosense_updated }}" > .cosense-last-updated
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/NAKADANobuhiro/CosenseLink.git
-          git add a6j.js
+          git add a6j.js .cosense-last-updated
           git commit -m "chore: update a6j.js from Cosense backup [skip ci]"
           git push origin main
           echo "🚀 a6j.js を更新して push しました"
